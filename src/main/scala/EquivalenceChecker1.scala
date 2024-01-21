@@ -5,8 +5,6 @@ import java.io.{ByteArrayOutputStream, File, PrintStream}
 
 object EquivalenceChecker1 {
   private val out = System.out
-  System.setOut(new PrintStream(new ByteArrayOutputStream))
-  System.setErr(new PrintStream(new ByteArrayOutputStream))
   
   private def time[R](name: String)(block: => R): R = {
     val t0 = System.nanoTime()
@@ -51,6 +49,9 @@ object EquivalenceChecker1 {
           .valueName("<file>")
           .action((x, c) => c.copy(z3 = x))
           .text("path to z3 executable"),
+        opt[Unit]('q', "quiet")
+          .action((_, c) => c.copy(quiet = true))
+          .text("quiet"),
         opt[Seq[String]]("typechef-args")
           .valueName("<arg1>,<arg2>,...")
           .action((x, c) => c.copy(typechefArgs = x))
@@ -59,6 +60,10 @@ object EquivalenceChecker1 {
       )
     }, args, Config()) match {
       case Some(config) =>
+        if (config.quiet) {
+          System.setOut(new PrintStream(new ByteArrayOutputStream))
+          System.setErr(new PrintStream(new ByteArrayOutputStream))
+        }
         time("Total") {
           config.out.mkdirs()
           FeatureExprFactory.setDefault(FeatureExprFactory.sat)
